@@ -1,64 +1,39 @@
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import invariant from 'tiny-invariant'
 import type { Post, PostListItem } from './types'
 import { normalizeUrl, sleep } from './utils'
 import { fetchWithTimeout } from './fetch'
 import { parsePostList, parsePost } from './parser'
 import { writeCsv } from './csv'
 
+const BATCH_SIZE = 5
+
 export async function fetchPostDetails(postItem: PostListItem): Promise<Post> {
   const url = `${postItem.permalink}.json?limit=500`
-  console.log(`  Fetching post: ${postItem.id}`)
 
   const json = await fetchWithTimeout(url)
   return parsePost(json, postItem)
 }
 
-export async function fetchPostListFromUrl(
-  baseUrl: string,
-  limit: number
-): Promise<PostListItem[]> {
-  const posts: PostListItem[] = []
-  let after: string | null = null
-  const isTopSort = baseUrl.includes('/top')
-
-  while (posts.length < limit) {
-    const params = new URLSearchParams()
-    if (after) {
-      params.set('after', after)
-    }
-    if (isTopSort) {
-      params.set('t', 'all')
-    }
-    const queryString = params.toString()
-    const url = `${baseUrl}.json${queryString ? `?${queryString}` : ''}`
-    console.log(`Fetching post list: ${url}`)
-
-    const json = await fetchWithTimeout(url)
-    const result = parsePostList(json)
-
-    if (result.posts.length === 0) {
-      break
-    }
-
-    for (const post of result.posts) {
-      if (posts.length >= limit) {
-        break
+async function fetchPostBatch(
+  postItems: PostListItem[],
+  folder: string
+): Promise<Post[]> {
+  const results = await Promise.all(
+    postItems.map(async (postItem) => {
+      try {
+        const post = await fetchPostDetails(postItem)
+        const filePath = join(folder, `${post.id}.json`)
+        await Bun.write(filePath, JSON.stringify(post, null, 2))
+        return post
+      } catch (error) {
+        console.error(`  Error fetching post ${postItem.id}:`, error)
+        return null
       }
-      posts.push(post)
-    }
+    })
+  )
 
-    after = result.after
-
-    if (!after || posts.length >= limit) {
-      break
-    }
-
-    await sleep(2000)
-  }
-
-  return posts
+  return results.filter((post): post is Post => post !== null)
 }
 
 export async function scrape(url: string, limit: number): Promise<void> {
@@ -71,31 +46,58 @@ export async function scrape(url: string, limit: number): Promise<void> {
   const folder = subreddit
   await mkdir(folder, { recursive: true })
 
-  const postList = await fetchPostListFromUrl(baseUrl, limit)
-  console.log(`\nFound ${postList.length} posts to fetch\n`)
-
   const posts: Post[] = []
+  let after: string | null = null
+  const isTopSort = baseUrl.includes('/top')
+  let totalFetched = 0
 
-  for (let i = 0; i < postList.length; i++) {
-    const postItem = postList[i]
-    invariant(postItem, 'Post item not found')
-    console.log(
-      `[${i + 1}/${postList.length}] ${postItem.title.slice(0, 50)}...`
-    )
+  while (posts.length < limit) {
+    const params = new URLSearchParams()
+    if (after) {
+      params.set('after', after)
+    }
+    if (isTopSort) {
+      params.set('t', 'all')
+    }
+    const queryString = params.toString()
+    const listUrl = `${baseUrl}.json${queryString ? `?${queryString}` : ''}`
+    console.log(`Fetching post list: ${listUrl}`)
 
-    try {
-      const post = await fetchPostDetails(postItem)
-      posts.push(post)
+    const json = await fetchWithTimeout(listUrl)
+    const result = parsePostList(json)
 
-      const filePath = join(folder, `${post.id}.json`)
-      await Bun.write(filePath, JSON.stringify(post, null, 2))
-    } catch (error) {
-      console.error(`  Error fetching post ${postItem.id}:`, error)
+    if (result.posts.length === 0) {
+      break
     }
 
-    if (i < postList.length - 1) {
-      await sleep(1500)
+    const postsToFetch = result.posts.slice(0, limit - posts.length)
+    console.log(`\nFetching ${postsToFetch.length} posts in parallel...\n`)
+
+    for (let i = 0; i < postsToFetch.length; i += BATCH_SIZE) {
+      const batch = postsToFetch.slice(i, i + BATCH_SIZE)
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1
+      const totalBatches = Math.ceil(postsToFetch.length / BATCH_SIZE)
+
+      console.log(
+        `[Batch ${batchNum}/${totalBatches}] Fetching ${batch.map((p) => p.id).join(', ')}`
+      )
+
+      const batchPosts = await fetchPostBatch(batch, folder)
+      posts.push(...batchPosts)
+      totalFetched += batch.length
+
+      if (i + BATCH_SIZE < postsToFetch.length) {
+        await sleep(1000)
+      }
     }
+
+    after = result.after
+
+    if (!after || posts.length >= limit) {
+      break
+    }
+
+    await sleep(2000)
   }
 
   await writeCsv(folder, posts)

@@ -1,48 +1,5 @@
 import { test, expect, describe, mock, beforeEach, afterEach } from 'bun:test'
-import { fetchPostListFromUrl, fetchPostDetails } from './scraper'
-
-const mockPostListJson = JSON.stringify({
-  kind: 'Listing',
-  data: {
-    after: 't3_post2',
-    children: [
-      {
-        kind: 't3',
-        data: {
-          id: 'post1',
-          title: 'First Post',
-          url: 'https://example.com/1',
-          permalink: '/r/test/comments/post1/first_post/',
-          author: 'poster1',
-          score: 50,
-          selftext: '',
-          created_utc: 1709283600
-        }
-      },
-      {
-        kind: 't3',
-        data: {
-          id: 'post2',
-          title: 'Second Post',
-          url: 'https://example.com/2',
-          permalink: '/r/test/comments/post2/second_post/',
-          author: 'poster2',
-          score: 30,
-          selftext: '',
-          created_utc: 1709287200
-        }
-      }
-    ]
-  }
-})
-
-const mockEmptyListJson = JSON.stringify({
-  kind: 'Listing',
-  data: {
-    after: null,
-    children: []
-  }
-})
+import { fetchPostDetails } from './scraper'
 
 const mockPostJson = JSON.stringify([
   {
@@ -83,70 +40,6 @@ const mockPostJson = JSON.stringify([
     }
   }
 ])
-
-describe('fetchPostListFromUrl', () => {
-  const originalFetch = globalThis.fetch
-
-  afterEach(() => {
-    globalThis.fetch = originalFetch
-  })
-
-  test('fetches and parses post list', async () => {
-    let callCount = 0
-    globalThis.fetch = mock(() => {
-      callCount++
-      const json = callCount === 1 ? mockPostListJson : mockEmptyListJson
-      return Promise.resolve({
-        ok: true,
-        text: () => Promise.resolve(json)
-      } as Response)
-    }) as unknown as typeof fetch
-
-    const posts = await fetchPostListFromUrl(
-      'https://old.reddit.com/r/test',
-      10
-    )
-
-    expect(posts).toHaveLength(2)
-    expect(posts[0]!.id).toBe('post1')
-    expect(posts[0]!.title).toBe('First Post')
-    expect(posts[1]!.id).toBe('post2')
-  })
-
-  test('respects limit', async () => {
-    globalThis.fetch = mock(() =>
-      Promise.resolve({
-        ok: true,
-        text: () => Promise.resolve(mockPostListJson)
-      } as Response)
-    ) as unknown as typeof fetch
-
-    const posts = await fetchPostListFromUrl('https://old.reddit.com/r/test', 1)
-
-    expect(posts).toHaveLength(1)
-    expect(posts[0]!.id).toBe('post1')
-  })
-
-  test('calls fetch with correct URL', async () => {
-    globalThis.fetch = mock(() =>
-      Promise.resolve({
-        ok: true,
-        text: () => Promise.resolve(mockPostListJson)
-      } as Response)
-    ) as unknown as typeof fetch
-
-    await fetchPostListFromUrl('https://old.reddit.com/r/test', 2)
-
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      'https://old.reddit.com/r/test.json',
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          'User-Agent': expect.any(String)
-        })
-      })
-    )
-  })
-})
 
 describe('fetchPostDetails', () => {
   const originalFetch = globalThis.fetch
