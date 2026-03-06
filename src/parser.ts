@@ -1,112 +1,122 @@
-import { parseHTML } from 'linkedom'
-
 import type { Comment, Post, PostListItem } from './types'
-import { parseUpvotes } from './utils'
 
-type ParsedDocument = ReturnType<typeof parseHTML>['document']
+interface RedditPostData {
+  author: string
+  created_utc: number
+  id: string
+  permalink: string
+  score: number
+  selftext: string
+  title: string
+  url: string
+}
 
-export function parseComments(document: ParsedDocument): Comment[] {
+interface RedditCommentData {
+  author: string
+  body: string
+  created_utc: number
+  id: string
+  permalink: string
+  replies?: { data?: { children?: RedditCommentChild[] } } | ''
+  score: number
+}
+
+interface RedditPostChild {
+  data: RedditPostData
+  kind: string
+}
+
+interface RedditCommentChild {
+  data: RedditCommentData
+  kind: string
+}
+
+interface RedditListingResponse {
+  data: {
+    after: string | null
+    children: RedditPostChild[]
+  }
+}
+
+type RedditPostResponse = [
+  { data: { children: [{ data: RedditPostData }] } },
+  { data: { children: RedditCommentChild[] } }
+]
+
+export function parseComments(children: RedditCommentChild[]): Comment[] {
   const comments: Comment[] = []
-  const commentEls = document.querySelectorAll('.commentarea .comment')
 
-  for (const el of commentEls) {
-    const fullname = el.getAttribute('data-fullname') || ''
-    const id = fullname.replace('t1_', '')
+  for (const child of children) {
+    if (child.kind !== 't1') continue
 
-    const contentEl = el.querySelector('.usertext-body .md')
-    const content = contentEl?.textContent?.trim() || ''
+    const data = child.data
+    const date = new Date(data.created_utc * 1000).toISOString()
 
-    const scoreEl = el.querySelector('.score.unvoted')
-    const upvotes = parseUpvotes(scoreEl?.textContent)
+    comments.push({
+      content: data.body || '',
+      date,
+      id: data.id,
+      upvotes: data.score || 0,
+      url: data.permalink ? `https://old.reddit.com${data.permalink}` : '',
+      user: data.author || '[deleted]'
+    })
 
-    const authorEl = el.querySelector('.author')
-    const user = authorEl?.textContent?.trim() || '[deleted]'
-
-    const timeEl = el.querySelector('time')
-    const date = timeEl?.getAttribute('datetime') || ''
-
-    const permalinkEl = el.querySelector('.bylink')
-    const permalink = permalinkEl?.getAttribute('href') || ''
-    const url = permalink.startsWith('http')
-      ? permalink
-      : permalink
-        ? `https://old.reddit.com${permalink}`
-        : ''
-
-    if (id) {
-      comments.push({
-        content,
-        date,
-        id,
-        upvotes,
-        url,
-        user
-      })
+    if (
+      data.replies &&
+      typeof data.replies === 'object' &&
+      data.replies.data?.children
+    ) {
+      comments.push(...parseComments(data.replies.data.children))
     }
   }
 
   return comments
 }
 
-export function parsePost(html: string, postItem: PostListItem): Post {
-  const { document } = parseHTML(html)
+export function parsePost(json: string, postItem: PostListItem): Post {
+  const response = JSON.parse(json) as RedditPostResponse
+  const postData = response[0].data.children[0]?.data
+  const commentsData = response[1].data.children || []
 
-  const siteTable = document.querySelector('.sitetable.linklisting .thing')
-
-  const contentEl = document.querySelector('.expando .usertext-body .md')
-  const content = contentEl?.textContent?.trim() || ''
-
-  const scoreEl =
-    siteTable?.querySelector('.score.unvoted') ||
-    document.querySelector('.score.unvoted')
-  const upvotes = parseUpvotes(scoreEl?.textContent)
-
-  const authorEl =
-    siteTable?.querySelector('.author') ||
-    document.querySelector('.tagline .author')
-  const user = authorEl?.textContent?.trim() || '[deleted]'
-
-  const timeEl =
-    siteTable?.querySelector('time') || document.querySelector('.tagline time')
-  const date = timeEl?.getAttribute('datetime') || ''
-
-  const comments = parseComments(document)
+  const date = postData?.created_utc
+    ? new Date(postData.created_utc * 1000).toISOString()
+    : ''
 
   return {
-    comments,
-    content,
+    comments: parseComments(commentsData),
+    content: postData?.selftext || '',
     date,
     id: postItem.id,
     title: postItem.title,
-    upvotes,
+    upvotes: postData?.score || 0,
     url: postItem.url,
-    user
+    user: postData?.author || '[deleted]'
   }
 }
 
-export function parsePostList(html: string): PostListItem[] {
-  const { document } = parseHTML(html)
+export interface ParsePostListResult {
+  after: string | null
+  posts: PostListItem[]
+}
+
+export function parsePostList(json: string): ParsePostListResult {
+  const response = JSON.parse(json) as RedditListingResponse
   const posts: PostListItem[] = []
 
-  const things = document.querySelectorAll('.thing.link')
+  for (const child of response.data.children) {
+    if (child.kind !== 't3') continue
 
-  for (const thing of things) {
-    const fullname = thing.getAttribute('data-fullname') || ''
-    const id = fullname.replace('t3_', '')
-    const postUrl = thing.getAttribute('data-url') || ''
-    const permalink = thing.getAttribute('data-permalink') || ''
-    const titleEl = thing.querySelector('.title a.title')
-    const title = titleEl?.textContent?.trim() || ''
-
-    if (id && permalink) {
-      posts.push({
-        id,
-        permalink: `https://old.reddit.com${permalink}`,
-        title,
-        url: postUrl
-      })
-    }
+    const data = child.data
+    posts.push({
+      id: data.id,
+      permalink: `https://old.reddit.com${data.permalink}`,
+      title: data.title,
+      url: data.url
+    })
   }
 
-  return posts
+  return {
+    after: response.data.after,
+    posts
+  }
 }

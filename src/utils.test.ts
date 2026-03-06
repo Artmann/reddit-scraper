@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test'
-import { normalizeUrl, parseUpvotes, escapeCsvField } from './utils'
+import { normalizeUrl, escapeCsvField } from './utils'
 
 describe('normalizeUrl', () => {
   test('handles www.reddit.com', () => {
@@ -35,40 +35,6 @@ describe('normalizeUrl', () => {
     expect(() => normalizeUrl('https://example.com')).toThrow(
       'Invalid Reddit URL'
     )
-  })
-})
-
-describe('parseUpvotes', () => {
-  test("parses '42 points'", () => {
-    expect(parseUpvotes('42 points')).toBe(42)
-  })
-
-  test("parses '1 point'", () => {
-    expect(parseUpvotes('1 point')).toBe(1)
-  })
-
-  test('handles negative scores', () => {
-    expect(parseUpvotes('-5 points')).toBe(-5)
-  })
-
-  test('handles thousands', () => {
-    expect(parseUpvotes('1234 points')).toBe(1234)
-  })
-
-  test('returns 0 for null', () => {
-    expect(parseUpvotes(null)).toBe(0)
-  })
-
-  test('returns 0 for undefined', () => {
-    expect(parseUpvotes(undefined)).toBe(0)
-  })
-
-  test('returns 0 for empty string', () => {
-    expect(parseUpvotes('')).toBe(0)
-  })
-
-  test('returns 0 for non-numeric text', () => {
-    expect(parseUpvotes('score hidden')).toBe(0)
   })
 })
 

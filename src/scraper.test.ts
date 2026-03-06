@@ -1,46 +1,88 @@
 import { test, expect, describe, mock, beforeEach, afterEach } from 'bun:test'
 import { fetchPostListFromUrl, fetchPostDetails } from './scraper'
 
-const mockSubredditHtml = `
-<html>
-<body>
-  <div class="thing link" data-fullname="t3_post1" data-url="https://example.com/1" data-permalink="/r/test/comments/post1/first_post/">
-    <p class="title"><a class="title">First Post</a></p>
-  </div>
-  <div class="thing link" data-fullname="t3_post2" data-url="https://example.com/2" data-permalink="/r/test/comments/post2/second_post/">
-    <p class="title"><a class="title">Second Post</a></p>
-  </div>
-</body>
-</html>
-`
+const mockPostListJson = JSON.stringify({
+  kind: 'Listing',
+  data: {
+    after: 't3_post2',
+    children: [
+      {
+        kind: 't3',
+        data: {
+          id: 'post1',
+          title: 'First Post',
+          url: 'https://example.com/1',
+          permalink: '/r/test/comments/post1/first_post/',
+          author: 'poster1',
+          score: 50,
+          selftext: '',
+          created_utc: 1709283600
+        }
+      },
+      {
+        kind: 't3',
+        data: {
+          id: 'post2',
+          title: 'Second Post',
+          url: 'https://example.com/2',
+          permalink: '/r/test/comments/post2/second_post/',
+          author: 'poster2',
+          score: 30,
+          selftext: '',
+          created_utc: 1709287200
+        }
+      }
+    ]
+  }
+})
 
-const mockPostHtml = `
-<html>
-<body>
-  <div class="sitetable linklisting">
-    <div class="thing" data-fullname="t3_post1">
-      <span class="score unvoted">99 points</span>
-      <span class="tagline">
-        <a class="author">poster</a>
-        <time datetime="2024-03-01T09:00:00+00:00">March 1</time>
-      </span>
-    </div>
-  </div>
-  <div class="expando">
-    <div class="usertext-body"><div class="md"><p>Post body text</p></div></div>
-  </div>
-  <div class="commentarea">
-    <div class="comment" data-fullname="t1_c1">
-      <div class="usertext-body"><div class="md"><p>A comment</p></div></div>
-      <span class="score unvoted">5 points</span>
-      <a class="author">user1</a>
-      <time datetime="2024-03-01T10:00:00+00:00">1h</time>
-      <a class="bylink" href="/r/test/comments/post1/first_post/c1/">link</a>
-    </div>
-  </div>
-</body>
-</html>
-`
+const mockEmptyListJson = JSON.stringify({
+  kind: 'Listing',
+  data: {
+    after: null,
+    children: []
+  }
+})
+
+const mockPostJson = JSON.stringify([
+  {
+    kind: 'Listing',
+    data: {
+      children: [
+        {
+          kind: 't3',
+          data: {
+            id: 'post1',
+            title: 'First Post',
+            author: 'poster',
+            score: 99,
+            selftext: 'Post body text',
+            created_utc: 1709283600,
+            permalink: '/r/test/comments/post1/first_post/'
+          }
+        }
+      ]
+    }
+  },
+  {
+    kind: 'Listing',
+    data: {
+      children: [
+        {
+          kind: 't1',
+          data: {
+            id: 'c1',
+            body: 'A comment',
+            author: 'user1',
+            score: 5,
+            created_utc: 1709287200,
+            permalink: '/r/test/comments/post1/first_post/c1/'
+          }
+        }
+      ]
+    }
+  }
+])
 
 describe('fetchPostListFromUrl', () => {
   const originalFetch = globalThis.fetch
@@ -50,15 +92,13 @@ describe('fetchPostListFromUrl', () => {
   })
 
   test('fetches and parses post list', async () => {
-    // Return posts on first call, empty on second to stop pagination
     let callCount = 0
     globalThis.fetch = mock(() => {
       callCount++
-      const html =
-        callCount === 1 ? mockSubredditHtml : '<html><body></body></html>'
+      const json = callCount === 1 ? mockPostListJson : mockEmptyListJson
       return Promise.resolve({
         ok: true,
-        text: () => Promise.resolve(html)
+        text: () => Promise.resolve(json)
       } as Response)
     }) as unknown as typeof fetch
 
@@ -77,7 +117,7 @@ describe('fetchPostListFromUrl', () => {
     globalThis.fetch = mock(() =>
       Promise.resolve({
         ok: true,
-        text: () => Promise.resolve(mockSubredditHtml)
+        text: () => Promise.resolve(mockPostListJson)
       } as Response)
     ) as unknown as typeof fetch
 
@@ -91,15 +131,14 @@ describe('fetchPostListFromUrl', () => {
     globalThis.fetch = mock(() =>
       Promise.resolve({
         ok: true,
-        text: () => Promise.resolve(mockSubredditHtml)
+        text: () => Promise.resolve(mockPostListJson)
       } as Response)
     ) as unknown as typeof fetch
 
-    // Limit to 2 so it doesn't paginate
     await fetchPostListFromUrl('https://old.reddit.com/r/test', 2)
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      'https://old.reddit.com/r/test',
+      'https://old.reddit.com/r/test.json',
       expect.objectContaining({
         headers: expect.objectContaining({
           'User-Agent': expect.any(String)
@@ -116,7 +155,7 @@ describe('fetchPostDetails', () => {
     globalThis.fetch = mock(() =>
       Promise.resolve({
         ok: true,
-        text: () => Promise.resolve(mockPostHtml)
+        text: () => Promise.resolve(mockPostJson)
       } as Response)
     ) as unknown as typeof fetch
   })
@@ -143,7 +182,7 @@ describe('fetchPostDetails', () => {
     expect(post.comments).toHaveLength(1)
   })
 
-  test('fetches with ?limit=500 query param', async () => {
+  test('fetches with .json?limit=500 query param', async () => {
     const postItem = {
       id: 'post1',
       url: 'https://example.com/1',
@@ -154,7 +193,7 @@ describe('fetchPostDetails', () => {
     await fetchPostDetails(postItem)
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      'https://old.reddit.com/r/test/comments/post1/first_post/?limit=500',
+      'https://old.reddit.com/r/test/comments/post1/first_post/.json?limit=500',
       expect.any(Object)
     )
   })

@@ -29,13 +29,6 @@ export function normalizeUrl(url: string): {
   return { baseUrl, subreddit }
 }
 
-export function parseUpvotes(text: string | null | undefined): number {
-  if (!text) return 0
-  const cleaned = text.replace(/[^\d-]/g, '')
-  const num = parseInt(cleaned, 10)
-  return isNaN(num) ? 0 : num
-}
-
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }

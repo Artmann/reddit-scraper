@@ -1,6 +1,8 @@
 # Reddit Scraper
 
-A Reddit subreddit scraper built with Bun and TypeScript. Scrapes posts and comments from any public subreddit and saves the data as JSON files with a CSV index.
+A Reddit subreddit scraper built with Bun and TypeScript. Scrapes posts and
+comments from any public subreddit and saves the data as JSON files with a CSV
+index.
 
 ## Features
 
@@ -40,17 +42,19 @@ bun run index.ts "https://old.reddit.com/r/node/new/"
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
-| `<subreddit-url>` | Reddit URL to scrape (required). Supports `reddit.com`, `www.reddit.com`, and `old.reddit.com` |
-| `--limit <number>` | Maximum number of posts to scrape (default: 100) |
+| Argument           | Description                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------------- |
+| `<subreddit-url>`  | Reddit URL to scrape (required). Supports `reddit.com`, `www.reddit.com`, and `old.reddit.com` |
+| `--limit <number>` | Maximum number of posts to scrape (default: 100)                                               |
 
 ## Output
 
-For each subreddit scraped, creates a directory named after the subreddit containing:
+For each subreddit scraped, creates a directory named after the subreddit
+containing:
 
 - **`{postId}.json`** - Individual JSON files with full post data and comments
-- **`posts.csv`** - CSV index with columns: `id`, `title`, `file_path`, `upvotes`
+- **`posts.csv`** - CSV index with columns: `id`, `title`, `file_path`,
+  `upvotes`
 
 ### JSON Structure
 

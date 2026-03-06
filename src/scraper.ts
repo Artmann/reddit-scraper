@@ -8,11 +8,11 @@ import { parsePostList, parsePost } from './parser'
 import { writeCsv } from './csv'
 
 export async function fetchPostDetails(postItem: PostListItem): Promise<Post> {
-  const url = `${postItem.permalink}?limit=500`
+  const url = `${postItem.permalink}.json?limit=500`
   console.log(`  Fetching post: ${postItem.id}`)
 
-  const html = await fetchWithTimeout(url)
-  return parsePost(html, postItem)
+  const json = await fetchWithTimeout(url)
+  return parsePost(json, postItem)
 }
 
 export async function fetchPostListFromUrl(
@@ -20,28 +20,42 @@ export async function fetchPostListFromUrl(
   limit: number
 ): Promise<PostListItem[]> {
   const posts: PostListItem[] = []
-  let after = ''
+  let after: string | null = null
+  const isTopSort = baseUrl.includes('/top')
 
   while (posts.length < limit) {
-    const url = after ? `${baseUrl}?after=${after}` : baseUrl
+    const params = new URLSearchParams()
+    if (after) {
+      params.set('after', after)
+    }
+    if (isTopSort) {
+      params.set('t', 'all')
+    }
+    const queryString = params.toString()
+    const url = `${baseUrl}.json${queryString ? `?${queryString}` : ''}`
     console.log(`Fetching post list: ${url}`)
 
-    const html = await fetchWithTimeout(url)
-    const pagePosts = parsePostList(html)
+    const json = await fetchWithTimeout(url)
+    const result = parsePostList(json)
 
-    if (pagePosts.length === 0) {
+    if (result.posts.length === 0) {
       break
     }
 
-    for (const post of pagePosts) {
-      if (posts.length >= limit) break
+    for (const post of result.posts) {
+      if (posts.length >= limit) {
+        break
+      }
       posts.push(post)
-      after = `t3_${post.id}`
     }
 
-    if (posts.length < limit) {
-      await sleep(2000)
+    after = result.after
+
+    if (!after || posts.length >= limit) {
+      break
     }
+
+    await sleep(2000)
   }
 
   return posts
