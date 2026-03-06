@@ -60,7 +60,7 @@ describe('fetchPostListFromUrl', () => {
         ok: true,
         text: () => Promise.resolve(html)
       } as Response)
-    })
+    }) as unknown as typeof fetch
 
     const posts = await fetchPostListFromUrl(
       'https://old.reddit.com/r/test',
@@ -68,9 +68,9 @@ describe('fetchPostListFromUrl', () => {
     )
 
     expect(posts).toHaveLength(2)
-    expect(posts[0].id).toBe('post1')
-    expect(posts[0].title).toBe('First Post')
-    expect(posts[1].id).toBe('post2')
+    expect(posts[0]!.id).toBe('post1')
+    expect(posts[0]!.title).toBe('First Post')
+    expect(posts[1]!.id).toBe('post2')
   })
 
   test('respects limit', async () => {
@@ -79,12 +79,12 @@ describe('fetchPostListFromUrl', () => {
         ok: true,
         text: () => Promise.resolve(mockSubredditHtml)
       } as Response)
-    )
+    ) as unknown as typeof fetch
 
     const posts = await fetchPostListFromUrl('https://old.reddit.com/r/test', 1)
 
     expect(posts).toHaveLength(1)
-    expect(posts[0].id).toBe('post1')
+    expect(posts[0]!.id).toBe('post1')
   })
 
   test('calls fetch with correct URL', async () => {
@@ -93,7 +93,7 @@ describe('fetchPostListFromUrl', () => {
         ok: true,
         text: () => Promise.resolve(mockSubredditHtml)
       } as Response)
-    )
+    ) as unknown as typeof fetch
 
     // Limit to 2 so it doesn't paginate
     await fetchPostListFromUrl('https://old.reddit.com/r/test', 2)
@@ -118,7 +118,7 @@ describe('fetchPostDetails', () => {
         ok: true,
         text: () => Promise.resolve(mockPostHtml)
       } as Response)
-    )
+    ) as unknown as typeof fetch
   })
 
   afterEach(() => {

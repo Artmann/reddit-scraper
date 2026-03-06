@@ -1,8 +1,11 @@
 import { parseHTML } from 'linkedom'
+
 import type { Comment, Post, PostListItem } from './types'
 import { parseUpvotes } from './utils'
 
-export function parseComments(document: Document): Comment[] {
+type ParsedDocument = ReturnType<typeof parseHTML>['document']
+
+export function parseComments(document: ParsedDocument): Comment[] {
   const comments: Comment[] = []
   const commentEls = document.querySelectorAll('.commentarea .comment')
 

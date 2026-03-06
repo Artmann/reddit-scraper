@@ -1,5 +1,6 @@
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import invariant from 'tiny-invariant'
 import type { Post, PostListItem } from './types'
 import { normalizeUrl, sleep } from './utils'
 import { fetchWithTimeout } from './fetch'
@@ -63,6 +64,7 @@ export async function scrape(url: string, limit: number): Promise<void> {
 
   for (let i = 0; i < postList.length; i++) {
     const postItem = postList[i]
+    invariant(postItem, 'Post item not found')
     console.log(
       `[${i + 1}/${postList.length}] ${postItem.title.slice(0, 50)}...`
     )

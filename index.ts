@@ -6,11 +6,13 @@ function parseArgs(): { url: string; limit: number } {
   let limit = 100
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--limit' && args[i + 1]) {
-      limit = parseInt(args[i + 1], 10)
+    const arg = args[i]
+    const nextArg = args[i + 1]
+    if (arg === '--limit' && nextArg) {
+      limit = parseInt(nextArg, 10)
       i++
-    } else if (!args[i].startsWith('--')) {
-      url = args[i]
+    } else if (arg && !arg.startsWith('--')) {
+      url = arg
     }
   }
 

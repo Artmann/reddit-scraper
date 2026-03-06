@@ -89,10 +89,10 @@ describe('parsePostList', () => {
     const posts = parsePostList(mockSubredditHtml)
 
     expect(posts).toHaveLength(2)
-    expect(posts[0].id).toBe('abc123')
-    expect(posts[0].title).toBe('Test Post Title')
-    expect(posts[0].url).toBe('https://example.com/link')
-    expect(posts[0].permalink).toBe(
+    expect(posts[0]!.id).toBe('abc123')
+    expect(posts[0]!.title).toBe('Test Post Title')
+    expect(posts[0]!.url).toBe('https://example.com/link')
+    expect(posts[0]!.permalink).toBe(
       'https://old.reddit.com/r/test/comments/abc123/test_post_title/'
     )
   })
@@ -100,8 +100,8 @@ describe('parsePostList', () => {
   test('handles self posts', () => {
     const posts = parsePostList(mockSubredditHtml)
 
-    expect(posts[1].id).toBe('def456')
-    expect(posts[1].title).toBe('Self Post')
+    expect(posts[1]!.id).toBe('def456')
+    expect(posts[1]!.title).toBe('Self Post')
   })
 
   test('returns empty array for HTML without posts', () => {
@@ -140,9 +140,9 @@ describe('parsePost', () => {
     const post = parsePost(mockPostHtml, postItem)
 
     expect(post.comments).toHaveLength(2)
-    expect(post.comments[0].content).toBe('First comment')
-    expect(post.comments[0].upvotes).toBe(10)
-    expect(post.comments[0].user).toBe('commenter1')
+    expect(post.comments[0]!.content).toBe('First comment')
+    expect(post.comments[0]!.upvotes).toBe(10)
+    expect(post.comments[0]!.user).toBe('commenter1')
   })
 })
 
@@ -152,11 +152,11 @@ describe('parseComments', () => {
     const comments = parseComments(document)
 
     expect(comments).toHaveLength(2)
-    expect(comments[0].id).toBe('comment1')
-    expect(comments[0].content).toBe('First comment')
-    expect(comments[0].upvotes).toBe(10)
-    expect(comments[0].user).toBe('commenter1')
-    expect(comments[0].url).toBe(
+    expect(comments[0]!.id).toBe('comment1')
+    expect(comments[0]!.content).toBe('First comment')
+    expect(comments[0]!.upvotes).toBe(10)
+    expect(comments[0]!.user).toBe('commenter1')
+    expect(comments[0]!.url).toBe(
       'https://old.reddit.com/r/test/comments/abc123/test/comment1/'
     )
   })
@@ -166,7 +166,7 @@ describe('parseComments', () => {
     const comments = parseComments(document)
 
     expect(comments).toHaveLength(1)
-    expect(comments[0].user).toBe('[deleted]')
+    expect(comments[0]!.user).toBe('[deleted]')
   })
 
   test('returns empty array when no comments', () => {

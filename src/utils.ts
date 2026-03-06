@@ -1,3 +1,5 @@
+import invariant from 'tiny-invariant'
+
 export function escapeCsvField(field: string): string {
   if (field.includes(',') || field.includes('"') || field.includes('\n')) {
     return `"${field.replace(/"/g, '""')}"`
@@ -17,7 +19,8 @@ export function normalizeUrl(url: string): {
   }
 
   const subreddit = match[1]
-  const sortPath = match[2] || ''
+  invariant(subreddit, 'Subreddit name not found in URL')
+  const sortPath = match[2] ?? ''
 
   const baseUrl = `https://old.reddit.com/r/${subreddit}/${sortPath}`.replace(
     /\/$/,

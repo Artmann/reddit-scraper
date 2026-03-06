@@ -4,6 +4,7 @@ import { escapeCsvField } from './utils'
 
 export async function writeCsv(folder: string, posts: Post[]): Promise<void> {
   const header = 'id,title,file_path,upvotes'
+
   const rows = posts.map((post) => {
     const filePath = `${post.id}.json`
     return [
@@ -16,6 +17,8 @@ export async function writeCsv(folder: string, posts: Post[]): Promise<void> {
 
   const csvContent = [header, ...rows].join('\n')
   const csvPath = join(folder, 'posts.csv')
+
   await Bun.write(csvPath, csvContent)
+
   console.log(`\nWrote ${csvPath}`)
 }
