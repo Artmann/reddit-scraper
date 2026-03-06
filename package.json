@@ -1,0 +1,19 @@
+{
+  "name": "reddit-scraper",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "download": "bun run index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prettier": "^3.8.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "linkedom": "^0.18.12"
+  }
+}
