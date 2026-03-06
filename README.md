@@ -45,11 +45,11 @@ bun run index.ts "https://old.reddit.com/r/node/new/"
 
 ### Arguments
 
-| Argument            | Description                                                                                     |
-| ------------------- | ----------------------------------------------------------------------------------------------- |
-| `<subreddit-url>`   | Reddit URL to scrape (required). Supports `reddit.com`, `www.reddit.com`, and `old.reddit.com` |
-| `--limit <number>`  | Maximum number of posts to scrape (default: 100)                                                |
-| `--output`, `-o`    | Output directory (default: current directory)                                                   |
+| Argument           | Description                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------------- |
+| `<subreddit-url>`  | Reddit URL to scrape (required). Supports `reddit.com`, `www.reddit.com`, and `old.reddit.com` |
+| `--limit <number>` | Maximum number of posts to scrape (default: 100)                                               |
+| `--output`, `-o`   | Output directory (default: current directory)                                                  |
 
 ## Output
 
