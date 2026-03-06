@@ -12,6 +12,7 @@ export interface Post {
   content: string
   date: string
   id: string
+  isSelf: boolean
   title: string
   upvotes: number
   url: string

@@ -4,6 +4,7 @@ interface RedditPostData {
   author: string
   created_utc: number
   id: string
+  is_self: boolean
   permalink: string
   score: number
   selftext: string
@@ -87,6 +88,7 @@ export function parsePost(json: string, postItem: PostListItem): Post {
     content: postData?.selftext || '',
     date,
     id: postItem.id,
+    isSelf: postData?.is_self ?? false,
     title: postItem.title,
     upvotes: postData?.score || 0,
     url: postItem.url,

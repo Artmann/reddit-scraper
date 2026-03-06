@@ -53,7 +53,7 @@ For each subreddit scraped, creates a directory named after the subreddit
 containing:
 
 - **`{postId}.json`** - Individual JSON files with full post data and comments
-- **`posts.csv`** - CSV index with columns: `id`, `title`, `file_path`,
+- **`posts.csv`** - CSV index with columns: `id`, `title`, `type`, `file_path`,
   `upvotes`
 
 ### JSON Structure
@@ -62,8 +62,8 @@ containing:
 {
   "id": "t3_abc123",
   "title": "Post title",
+  "isSelf": false,
   "url": "https://example.com/linked-content",
-  "permalink": "/r/subreddit/comments/abc123/post_title/",
   "content": "Post body text...",
   "upvotes": 1234,
   "user": "username",

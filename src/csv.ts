@@ -3,13 +3,14 @@ import type { Post } from './types'
 import { escapeCsvField } from './utils'
 
 export async function writeCsv(folder: string, posts: Post[]): Promise<void> {
-  const header = 'id,title,file_path,upvotes'
+  const header = 'id,title,type,file_path,upvotes'
 
   const rows = posts.map((post) => {
     const filePath = `${post.id}.json`
     return [
       post.id,
       escapeCsvField(post.title),
+      post.isSelf ? 'self' : 'link',
       filePath,
       post.upvotes.toString()
     ].join(',')
