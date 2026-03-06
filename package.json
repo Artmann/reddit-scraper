@@ -4,7 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "download": "bun run index.ts"
+    "download": "bun run index.ts",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/bun": "latest",
