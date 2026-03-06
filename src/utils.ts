@@ -1,3 +1,10 @@
+export function escapeCsvField(field: string): string {
+  if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+    return `"${field.replace(/"/g, '""')}"`
+  }
+  return field
+}
+
 export function normalizeUrl(url: string): {
   baseUrl: string
   subreddit: string
@@ -24,13 +31,6 @@ export function parseUpvotes(text: string | null | undefined): number {
   const cleaned = text.replace(/[^\d-]/g, '')
   const num = parseInt(cleaned, 10)
   return isNaN(num) ? 0 : num
-}
-
-export function escapeCsvField(field: string): string {
-  if (field.includes(',') || field.includes('"') || field.includes('\n')) {
-    return `"${field.replace(/"/g, '""')}"`
-  }
-  return field
 }
 
 export function sleep(ms: number): Promise<void> {

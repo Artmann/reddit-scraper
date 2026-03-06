@@ -6,6 +6,14 @@ import { fetchWithTimeout } from './fetch'
 import { parsePostList, parsePost } from './parser'
 import { writeCsv } from './csv'
 
+export async function fetchPostDetails(postItem: PostListItem): Promise<Post> {
+  const url = `${postItem.permalink}?limit=500`
+  console.log(`  Fetching post: ${postItem.id}`)
+
+  const html = await fetchWithTimeout(url)
+  return parsePost(html, postItem)
+}
+
 export async function fetchPostListFromUrl(
   baseUrl: string,
   limit: number
@@ -36,14 +44,6 @@ export async function fetchPostListFromUrl(
   }
 
   return posts
-}
-
-export async function fetchPostDetails(postItem: PostListItem): Promise<Post> {
-  const url = `${postItem.permalink}?limit=500`
-  console.log(`  Fetching post: ${postItem.id}`)
-
-  const html = await fetchWithTimeout(url)
-  return parsePost(html, postItem)
 }
 
 export async function scrape(url: string, limit: number): Promise<void> {

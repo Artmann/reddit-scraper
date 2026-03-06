@@ -1,26 +1,26 @@
 export interface Comment {
-  id: string
-  url: string
   content: string
-  upvotes: number
   date: string
+  id: string
+  upvotes: number
+  url: string
   user: string
 }
 
 export interface Post {
-  id: string
-  url: string
-  title: string
+  comments: Comment[]
   content: string
   date: string
+  id: string
+  title: string
   upvotes: number
+  url: string
   user: string
-  comments: Comment[]
 }
 
 export interface PostListItem {
   id: string
-  url: string
-  title: string
   permalink: string
+  title: string
+  url: string
 }
