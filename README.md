@@ -23,7 +23,7 @@ bun install
 ## Usage
 
 ```bash
-bun run index.ts <subreddit-url> [--limit <number>]
+bun run index.ts <subreddit-url> [--limit <number>] [--output <dir>]
 ```
 
 ### Examples
@@ -35,6 +35,9 @@ bun run index.ts "https://reddit.com/r/programming/top/" --limit 50
 # Scrape 100 posts (default limit) from r/typescript
 bun run index.ts "https://reddit.com/r/typescript/"
 
+# Save to custom output directory
+bun run index.ts "https://reddit.com/r/bun/" --output ./data
+
 # Works with various Reddit URL formats
 bun run index.ts "https://www.reddit.com/r/bun/"
 bun run index.ts "https://old.reddit.com/r/node/new/"
@@ -42,10 +45,11 @@ bun run index.ts "https://old.reddit.com/r/node/new/"
 
 ### Arguments
 
-| Argument           | Description                                                                                    |
-| ------------------ | ---------------------------------------------------------------------------------------------- |
-| `<subreddit-url>`  | Reddit URL to scrape (required). Supports `reddit.com`, `www.reddit.com`, and `old.reddit.com` |
-| `--limit <number>` | Maximum number of posts to scrape (default: 100)                                               |
+| Argument            | Description                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------------------- |
+| `<subreddit-url>`   | Reddit URL to scrape (required). Supports `reddit.com`, `www.reddit.com`, and `old.reddit.com` |
+| `--limit <number>`  | Maximum number of posts to scrape (default: 100)                                                |
+| `--output`, `-o`    | Output directory (default: current directory)                                                   |
 
 ## Output
 

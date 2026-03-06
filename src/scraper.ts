@@ -36,14 +36,20 @@ async function fetchPostBatch(
   return results.filter((post): post is Post => post !== null)
 }
 
-export async function scrape(url: string, limit: number): Promise<void> {
+export async function scrape(
+  url: string,
+  limit: number,
+  output: string = '.'
+): Promise<void> {
   const { baseUrl, subreddit } = normalizeUrl(url)
+
+  const folder = join(output, subreddit)
 
   console.log(`\nScraping r/${subreddit}`)
   console.log(`Limit: ${limit} posts`)
+  console.log(`Output: ${folder}`)
   console.log(`Base URL: ${baseUrl}\n`)
 
-  const folder = subreddit
   await mkdir(folder, { recursive: true })
 
   const posts: Post[] = []
