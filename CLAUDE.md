@@ -108,3 +108,26 @@ bun --hot ./index.ts
 
 For more information, read the Bun API docs in
 `node_modules/bun-types/docs/**.mdx`.
+
+## Code Style
+
+- Always use braces for if/for/while statements, even for single-line bodies
+
+```ts
+// Good
+if (condition) {
+  doSomething()
+}
+
+// Bad
+if (condition) doSomething()
+```
+
+## Reddit API
+
+- Use JSON endpoints (`.json` suffix) instead of HTML scraping - more reliable
+  and structured
+- Reddit's `/top` sort requires a time parameter (`t=all`, `t=year`, `t=month`,
+  `t=week`, `t=day`) to return more than recent posts
+- Pagination uses `after` parameter from the JSON response's `data.after` field
+- Post IDs are prefixed with `t3_`, comment IDs with `t1_`
